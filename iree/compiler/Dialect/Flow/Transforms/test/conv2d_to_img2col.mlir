@@ -1,6 +1,5 @@
 // RUN: iree-opt -split-input-file -iree-flow-convert-conv2d-to-img2col %s | IreeFileCheck %s
 
-
 func @conv_16433136(%arg0: tensor<1x16x16x4xf32>, %arg1: tensor<3x3x4x16xf32>, %arg2: tensor<1x14x14x16xf32>) -> tensor<1x14x14x16xf32> {
     %0 = linalg.conv_2d_input_nhwc_filter_hwcf
       {dilations = dense<1> : tensor<2xi64>, strides = dense<1> : tensor<2xi64> }
@@ -31,3 +30,13 @@ func @conv_16433136(%arg0: tensor<1x16x16x4xf32>, %arg1: tensor<3x3x4x16xf32>, %
 //      CHECK: %[[MATMUL_RESULT:.+]] = linalg.matmul ins(%[[RESHAPED_INIT_COL_TENSOR]], %[[RESHAPED_FILTER]] : tensor<196x36xf32>, tensor<36x16xf32>) outs(%[[RESHAPED_OUTPUT]] : tensor<196x16xf32>)
 //      CHECK: %[[RESULT:.+]] = linalg.tensor_expand_shape %[[MATMUL_RESULT]] {{\[}}[0, 1, 2], [3]] : tensor<196x16xf32> into tensor<1x14x14x16xf32>
 //      CHECK: return %[[RESULT]]
+
+// -----
+
+func @depthwise_conv_hwc_114x16x3(%input: tensor<1x114x114x16xf32>, %filter: tensor<3x3x16xf32>, %output: tensor<1x112x112x16xf32>) -> tensor<1x112x112x16xf32> {
+    %0 = linalg.depthwise_conv_2d_input_nhwc_filter_hwc {
+      dilations = dense<1> : tensor<2xi64>,
+      strides = dense<1> : tensor<2xi64>
+    } ins(%input, %filter : tensor<1x114x114x16xf32>, tensor<3x3x16xf32>) outs(%output : tensor<1x112x112x16xf32>) -> tensor<1x112x112x16xf32>
+    return %0 : tensor<1x112x112x16xf32>
+}
